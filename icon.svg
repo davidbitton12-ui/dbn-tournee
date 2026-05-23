@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <rect width="512" height="512" rx="100" fill="#0f172a"/>
+  <text x="256" y="200" font-family="Arial Black, sans-serif" font-size="120" font-weight="900" fill="#ffffff" text-anchor="middle">DBN</text>
+  <text x="256" y="310" font-family="Arial, sans-serif" font-size="52" font-weight="700" fill="#a78bfa" text-anchor="middle">Tournée</text>
+  <circle cx="256" cy="390" r="18" fill="#22c55e"/>
+</svg>
