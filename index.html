@@ -2,21 +2,33 @@
 <html lang="fr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="DBN Tournée" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <link rel="apple-touch-icon" href="/dbn-tournee/icon.svg" />
     <link rel="manifest" href="/dbn-tournee/manifest.json" />
     <title>DBN Tournée</title>
     <style>
-      * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body, #root { height: 100%; width: 100%; }
-      body { background: #09090d; overflow: hidden; }
+      * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+      html { height: 100%; height: -webkit-fill-available; }
+      body { 
+        min-height: 100vh;
+        min-height: -webkit-fill-available;
+        background: #09090d;
+        overflow: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+      #root { 
+        height: 100vh;
+        height: -webkit-fill-available;
+        width: 100%;
+      }
     </style>
-    <script type="module" crossorigin src="/dbn-tournee/assets/index-_lEYlqLP.js"></script>
   </head>
   <body>
     <div id="root"></div>
+    <script type="module" src="/dbn-tournee/assets/index-_lEYlqLP.js"></script>
   </body>
 </html>
