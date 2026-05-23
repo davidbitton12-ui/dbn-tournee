@@ -45,14 +45,11 @@ const CSS = `
 html,body{height:100%;background:#e8edf2;font-family:'Outfit',sans-serif}
 #root{height:100%}
 
-.shell{display:flex;justify-content:center;align-items:center;min-height:100vh;background:#e8edf2}
-.phone{width:min(390px,100vw);height:min(844px,100vh);background:#f4f6f9;
-  border-radius:min(44px,0px);overflow:hidden;position:relative;display:flex;flex-direction:column;
-  box-shadow:0 0 0 1px #00000012,0 30px 80px #00000030}
+.shell{display:flex;justify-content:center;align-items:center;min-height:100vh;background:#f4f6f9}
+.phone{width:100vw;height:100vh;background:#f4f6f9;
+  overflow:hidden;position:relative;display:flex;flex-direction:column;}
 
-.sb{background:#f4f6f9;padding:14px 28px 8px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
-.notch{width:120px;height:34px;background:#1a1a1a;border-radius:0 0 20px 20px;margin:0 auto}
-.screen{flex:1;overflow-y:auto;padding-bottom:88px}
+.screen{flex:1;overflow-y:auto;padding-bottom:88px;padding-top:env(safe-area-inset-top,0px)}
 
 .navbar{position:absolute;bottom:0;left:0;right:0;height:80px;background:#ffffffee;
   backdrop-filter:blur(20px);border-top:1px solid #e2e8f0;
@@ -296,9 +293,6 @@ export default function App() {
   const totalMemo  = items.filter(i=>i.type==="quick").length;
 
   const handlePrint = () => {
-    const html = buildPrintHTML(items, today);
-    const w = window.open("","_blank");
-    if(w){ w.document.write(html); w.document.close(); setTimeout(()=>w.print(),400); }
     setShowPdf(true);
   };
 
@@ -306,20 +300,12 @@ export default function App() {
     <div className="shell">
       <style>{CSS}</style>
       <div className="phone">
-        <div className="sb">
-          <span style={{fontSize:13,fontWeight:600,color:"#1e293b"}}>
-            {new Date().toLocaleTimeString("fr-FR",{hour:"2-digit",minute:"2-digit"})}
-          </span>
-          <div className="notch"/>
-          <span style={{fontSize:12,color:"#1e293b"}}>●●● 5G</span>
-        </div>
 
         <div className="screen">
           {tab==="home"  && !showPdf && <Home items={items} setItems={setItems} visites={visites} totalCmd={totalCmd} totalGar={totalGar} totalMemo={totalMemo} today={today}/>}
           {tab==="recap" && !showPdf && <Recap items={items} today={today} onPrint={handlePrint}/>}
           {tab==="recap" && showPdf  && <PdfScreen items={items} today={today} onBack={()=>setShowPdf(false)} onPrint={()=>{const html=buildPrintHTML(items,today);const w=window.open("","_blank");if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),400);}}}/>}
-          {tab==="trade" && <Trade/>}
-          {tab==="home"  && showPdf  && <PdfScreen items={items} today={today} onBack={()=>setShowPdf(false)} onPrint={()=>{const html=buildPrintHTML(items,today);const w=window.open("","_blank");if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),400);}}}/>}
+          {tab==="trade" && !showPdf && <Trade/>}
         </div>
 
         {!showPdf && <div className="navbar">
