@@ -49,7 +49,7 @@ html,body{height:100%;background:#e8edf2;font-family:'Outfit',sans-serif}
 .phone{width:100vw;height:100vh;background:#f4f6f9;
   overflow:hidden;position:relative;display:flex;flex-direction:column;}
 
-.screen{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:96px;padding-top:env(safe-area-inset-top,0px);-webkit-overflow-scrolling:touch}
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:100px;padding-top:env(safe-area-inset-top,0px);-webkit-overflow-scrolling:touch}
 
 .navbar{position:fixed;bottom:0;left:0;right:0;height:80px;background:#fffffff5;
   backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid #e2e8f0;
@@ -92,7 +92,7 @@ html,body{height:100%;background:#e8edf2;font-family:'Outfit',sans-serif}
 .lightbox-close{position:absolute;top:20px;right:20px;background:#ffffff20;border:none;border-radius:50%;width:40px;height:40px;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 .ov{position:absolute;inset:0;background:#00000030;display:flex;align-items:flex-end;z-index:100;backdrop-filter:blur(3px)}
-.modal{width:100%;background:#f8fafc;border-radius:28px 28px 0 0;padding:20px 18px 40px;
+.modal{width:100%;background:#f8fafc;border-radius:28px 28px 0 0;padding:20px 18px 100px;
   max-height:93%;overflow-y:auto;animation:up .28s cubic-bezier(.34,1.2,.64,1);
   box-shadow:0 -8px 40px #00000018}
 @keyframes up{from{transform:translateY(50px);opacity:0}to{transform:translateY(0);opacity:1}}
