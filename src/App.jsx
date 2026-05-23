@@ -164,6 +164,7 @@ html,body{height:100%;background:#e8edf2;font-family:'Outfit',sans-serif}
 .pdf-note-row{display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-top:1px dashed #f1f5f9}
 .pdf-note-row:first-child{border-top:none;padding-top:0}
 .pdf-ftr{background:#f8fafc;border-top:1px solid #e2e8f0;padding:7px 16px;display:flex;justify-content:space-between}
+@media print{.shell{display:block}.phone{width:100%;height:auto;box-shadow:none;border-radius:0}.navbar{display:none!important}.fab-w{display:none!important}}
 
 .view-toggle{display:flex;gap:5px;margin:0 16px 10px;background:#fff;border-radius:12px;padding:4px;
   border:1px solid #e2e8f0}
@@ -235,7 +236,7 @@ function buildPrintHTML(items, today) {
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Tournée DBN — ${today}</title>
   <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:'Helvetica Neue',Arial,sans-serif;background:#fff;padding:0}
-  @page{margin:15mm 12mm;size:A4}@media print{body{padding:0}}</style></head><body>
+  @page{margin:12mm;size:A4}@media print{body{padding:0;-webkit-print-color-adjust:exact;print-color-adjust:exact}}</style></head><body>
   <div style="background:#0f172a;padding:18px 24px;display:flex;justify-content:space-between;align-items:center">
     <div>
       <div style="font-size:18px;font-weight:800;color:#fff;letter-spacing:-0.5px">DBN <span style="color:#818cf8">Développement</span></div>
@@ -293,7 +294,23 @@ export default function App() {
   const totalMemo  = items.filter(i=>i.type==="quick").length;
 
   const handlePrint = () => {
-    setShowPdf(true);
+    const html = buildPrintHTML(items, today);
+    const printWin = window.open('', '_blank');
+    if (printWin) {
+      printWin.document.write(html);
+      printWin.document.close();
+      printWin.onload = () => { printWin.print(); };
+    } else {
+      // Fallback for PWA: inject into current page and print
+      const prev = document.body.innerHTML;
+      const prevTitle = document.title;
+      document.title = 'Tournée DBN - ' + today;
+      document.body.innerHTML = html;
+      window.print();
+      document.body.innerHTML = prev;
+      document.title = prevTitle;
+      window.location.reload();
+    }
   };
 
   return (
@@ -630,7 +647,7 @@ function ActionModal({onClose,onSave}) {
   const [freeText,setFreeText]=useState("");
   const [actionType,setActionType]=useState("");
   const [labo,setLabo]=useState("");
-  const [notes,setNotes]=useState([{text:"",hasPhoto:false}]);
+  const [notes,setNotes]=useState([{text:"",hasPhoto:false,photo:null}]);
 
   const results=useMemo(()=>{
     if(!search||search.length<2)return[];
@@ -641,10 +658,11 @@ function ActionModal({onClose,onSave}) {
   const canNext=pharma||(isFree&&freeText.trim());
   const canSave=canNext&&actionType;
 
-  const addNote=()=>setNotes(p=>[...p,{text:"",hasPhoto:false}]);
+  const addNote=()=>setNotes(p=>[...p,{text:"",hasPhoto:false,photo:null}]);
   const updNote=(i,t)=>setNotes(p=>p.map((n,j)=>j===i?{...n,text:t}:n));
   const togPhoto=(i)=>setNotes(p=>p.map((n,j)=>j===i?{...n,hasPhoto:!n.hasPhoto}:n));
   const delNote=(i)=>setNotes(p=>p.filter((_,j)=>j!==i));
+  const updPhoto=(i,src)=>setNotes(p=>p.map((n,j)=>j===i?{...n,photo:src,hasPhoto:true}:n));
 
   const handleSave=()=>{
     const p=isFree?{n:freeText.trim(),a:"",c:""}:pharma;
@@ -742,11 +760,22 @@ function ActionModal({onClose,onSave}) {
                 <textarea className="ta" style={{minHeight:52,border:"none",padding:0,background:"transparent"}}
                   placeholder={`Note ${i+1}…`} value={n.text} onChange={e=>updNote(i,e.target.value)}/>
                 <div style={{display:"flex",alignItems:"center",gap:8,marginTop:6,borderTop:"1px solid #f1f5f9",paddingTop:6}}>
-                  <button className="cam-btn" style={{flex:1,padding:"6px 10px",fontSize:11}} onClick={()=>togPhoto(i)}>
-                    <ICam/>{n.hasPhoto?"📷 Photo ajoutée ✓":"Ajouter une photo"}
-                  </button>
+                  <label className="cam-btn" style={{flex:1,padding:"6px 10px",fontSize:11,cursor:"pointer"}}>
+                    <ICam/>
+                    {n.photo ? "📷 Photo ajoutée ✓" : "Ajouter une photo"}
+                    <input type="file" accept="image/*" capture="environment" style={{display:"none"}}
+                      onChange={e=>{
+                        const file = e.target.files[0];
+                        if(file){
+                          const reader = new FileReader();
+                          reader.onload = ev => updPhoto(i, ev.target.result);
+                          reader.readAsDataURL(file);
+                        }
+                      }}/>
+                  </label>
                   {notes.length>1&&<button onClick={()=>delNote(i)} style={{background:"none",border:"none",cursor:"pointer",color:"#94a3b8"}}><ITrash/></button>}
                 </div>
+                {n.photo && <img src={n.photo} alt="photo" style={{width:"100%",maxHeight:140,objectFit:"cover",borderRadius:8,marginTop:6}}/>}
               </div>
             ))}
             <button onClick={addNote} style={{display:"flex",alignItems:"center",gap:6,background:"none",border:"1.5px dashed #e2e8f0",borderRadius:10,padding:"8px 12px",color:"#94a3b8",cursor:"pointer",fontSize:12,width:"100%",justifyContent:"center",fontFamily:"'Outfit',sans-serif",marginTop:4}}>
