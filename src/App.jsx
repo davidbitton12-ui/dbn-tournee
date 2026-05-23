@@ -400,12 +400,16 @@ function VisiteCard({item,setItems}) {
       </div>
       {open&&<div style={{marginTop:10}}>
         {(item.notes||[]).map((n,i)=>(
-          <div key={i} className="note-row">
-            <span className="note-num">{i+1}</span>
-            <div style={{flex:1}}>
-              <div style={{fontSize:12,color:"#475569",lineHeight:1.5}}>{n.text||n}</div>
-              {n.hasPhoto&&<div style={{fontSize:10,color:"#d97706",marginTop:3}}>📷 Photo jointe</div>}
+          <div key={i} style={{background:"#f8fafc",borderRadius:9,padding:"8px 10px",border:"1px solid #e8eef4",marginBottom:5}}>
+            <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
+              <span className="note-num" style={{flexShrink:0,marginTop:2}}>{i+1}</span>
+              <div style={{fontSize:12,color:"#475569",lineHeight:1.5,flex:1}}>{n.text||n}</div>
             </div>
+            {n.photo && (
+              <img src={n.photo} alt="photo"
+                style={{width:"100%",maxHeight:200,objectFit:"cover",borderRadius:8,marginTop:8,border:"1px solid #e2e8f0",display:"block"}}
+              />
+            )}
           </div>
         ))}
         {(item.notes||[]).length===0&&<div style={{fontSize:12,color:"#94a3b8",textAlign:"center"}}>Aucune note</div>}
