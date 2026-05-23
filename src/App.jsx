@@ -49,11 +49,12 @@ html,body{height:100%;background:#e8edf2;font-family:'Outfit',sans-serif}
 .phone{width:100vw;height:100vh;background:#f4f6f9;
   overflow:hidden;position:relative;display:flex;flex-direction:column;}
 
-.screen{flex:1;overflow-y:auto;padding-bottom:88px;padding-top:env(safe-area-inset-top,0px)}
+.screen{flex:1;overflow-y:auto;overflow-x:hidden;padding-bottom:96px;padding-top:env(safe-area-inset-top,0px);-webkit-overflow-scrolling:touch}
 
-.navbar{position:absolute;bottom:0;left:0;right:0;height:80px;background:#ffffffee;
-  backdrop-filter:blur(20px);border-top:1px solid #e2e8f0;
-  display:flex;align-items:center;justify-content:space-around;padding-bottom:16px;z-index:10}
+.navbar{position:fixed;bottom:0;left:0;right:0;height:80px;background:#fffffff5;
+  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-top:1px solid #e2e8f0;
+  display:flex;align-items:center;justify-content:space-around;
+  padding-bottom:max(16px,env(safe-area-inset-bottom,16px));z-index:1000}
 .nb{display:flex;flex-direction:column;align-items:center;gap:3px;background:none;border:none;
   cursor:pointer;padding:8px 14px;color:#94a3b8;font-family:'Outfit',sans-serif;font-size:10px;font-weight:600;transition:color .2s}
 .nb.on{color:#6366f1}
@@ -86,6 +87,9 @@ html,body{height:100%;background:#e8edf2;font-family:'Outfit',sans-serif}
 .note-num{width:16px;height:16px;border-radius:50%;background:#6366f115;color:#6366f1;
   font-size:8px;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
 .empty{text-align:center;padding:50px 20px;color:#94a3b8;font-size:14px}
+.lightbox{position:fixed;inset:0;background:#000000ee;z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.lightbox img{max-width:96vw;max-height:92vh;object-fit:contain;border-radius:8px}
+.lightbox-close{position:absolute;top:20px;right:20px;background:#ffffff20;border:none;border-radius:50%;width:40px;height:40px;color:#fff;font-size:20px;cursor:pointer;display:flex;align-items:center;justify-content:center}
 
 .ov{position:absolute;inset:0;background:#00000030;display:flex;align-items:flex-end;z-index:100;backdrop-filter:blur(3px)}
 .modal{width:100%;background:#f8fafc;border-radius:28px 28px 0 0;padding:20px 18px 40px;
@@ -164,7 +168,12 @@ html,body{height:100%;background:#e8edf2;font-family:'Outfit',sans-serif}
 .pdf-note-row{display:flex;align-items:flex-start;gap:6px;padding:4px 0;border-top:1px dashed #f1f5f9}
 .pdf-note-row:first-child{border-top:none;padding-top:0}
 .pdf-ftr{background:#f8fafc;border-top:1px solid #e2e8f0;padding:7px 16px;display:flex;justify-content:space-between}
-@media print{.shell{display:block}.phone{width:100%;height:auto;box-shadow:none;border-radius:0}.navbar{display:none!important}.fab-w{display:none!important}}
+#dbn-print-container{display:none}
+@media print{
+  body > *:not(#dbn-print-container){display:none!important}
+  #dbn-print-container{display:block!important}
+  #dbn-print-container *{display:revert!important}
+}
 
 .view-toggle{display:flex;gap:5px;margin:0 16px 10px;background:#fff;border-radius:12px;padding:4px;
   border:1px solid #e2e8f0}
@@ -282,6 +291,7 @@ export default function App() {
   const [items,setItems]   = useState(INIT);
   const [fabOpen,setFabOpen] = useState(false);
   const [modal,setModal]   = useState(null);
+  const [lightbox,setLightbox] = useState(null);
 
   const today = new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
 
@@ -321,7 +331,7 @@ export default function App() {
       <div className="phone">
 
         <div className="screen">
-          {tab==="home"  && <Home items={items} setItems={setItems} visites={visites} totalCmd={totalCmd} totalGar={totalGar} totalMemo={totalMemo} today={today}/>}
+          {tab==="home"  && <Home items={items} setItems={setItems} visites={visites} totalCmd={totalCmd} totalGar={totalGar} totalMemo={totalMemo} today={today} onPhoto={setLightbox}/>}
           {tab==="recap" && <Recap items={items} today={today} onPrint={handlePrint}/>}
           {tab==="trade" && <Trade/>}
         </div>
@@ -347,13 +357,19 @@ export default function App() {
 
         {modal==="visite"&&<ActionModal onClose={()=>setModal(null)} onSave={v=>{addItem({...v,type:"visite"});setModal(null)}}/>}
         {modal==="quick" &&<QuickModal  onClose={()=>setModal(null)} onSave={v=>{addItem({...v,type:"quick",pharmacie:"",action:{type:"autre"}});setModal(null)}}/>}
+        {lightbox&&(
+          <div className="lightbox" onClick={()=>setLightbox(null)}>
+            <button className="lightbox-close" onClick={()=>setLightbox(null)}>✕</button>
+            <img src={lightbox} alt="photo plein écran"/>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
 // ─── HOME ─────────────────────────────────────────────────────────────────────
-function Home({items,setItems,visites,totalCmd,totalGar,totalMemo,today}) {
+function Home({items,setItems,visites,totalCmd,totalGar,totalMemo,today,onPhoto}) {
   const sorted = [...items].sort((a,b)=>a.heure.localeCompare(b.heure));
   return (
     <div>
@@ -370,14 +386,14 @@ function Home({items,setItems,visites,totalCmd,totalGar,totalMemo,today}) {
       </div>
       <div className="divl"/>
       <div className="sl">Chronologie du jour</div>
-      {sorted.map(item=>item.type==="visite"?<VisiteCard key={item.id} item={item} setItems={setItems}/>:<QuickCard key={item.id} item={item} setItems={setItems}/>)}
+      {sorted.map(item=>item.type==="visite"?<VisiteCard key={item.id} item={item} setItems={setItems} onPhoto={onPhoto}/>:<QuickCard key={item.id} item={item} setItems={setItems}/>)}
       {items.length===0&&<div className="empty">🗺️<br/><br/>Aucune activité<br/><span style={{fontSize:12}}>Appuie sur + pour commencer</span></div>}
     </div>
   );
 }
 
 // ─── VISITE CARD ──────────────────────────────────────────────────────────────
-function VisiteCard({item,setItems}) {
+function VisiteCard({item,setItems,onPhoto}) {
   const [open,setOpen]=useState(false);
   const t=item.action?.type||"autre";
   const c=ACT_COLORS[t];
@@ -406,8 +422,9 @@ function VisiteCard({item,setItems}) {
               <div style={{fontSize:12,color:"#475569",lineHeight:1.5,flex:1}}>{n.text||n}</div>
             </div>
             {n.photo && (
-              <img src={n.photo} alt="photo"
-                style={{width:"100%",maxHeight:200,objectFit:"cover",borderRadius:8,marginTop:8,border:"1px solid #e2e8f0",display:"block"}}
+              <img src={n.photo} alt="photo" onClick={()=>onPhoto&&onPhoto(n.photo)}
+                style={{width:"100%",maxHeight:200,objectFit:"cover",borderRadius:8,marginTop:8,
+                  border:"1px solid #e2e8f0",display:"block",cursor:"zoom-in"}}
               />
             )}
           </div>
