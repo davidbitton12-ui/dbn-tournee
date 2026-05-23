@@ -282,7 +282,7 @@ export default function App() {
   const [items,setItems]   = useState(INIT);
   const [fabOpen,setFabOpen] = useState(false);
   const [modal,setModal]   = useState(null);
-  const [showPdf,setShowPdf] = useState(false);
+
   const today = new Date().toLocaleDateString("fr-FR",{weekday:"long",day:"numeric",month:"long"});
 
   const addItem = (item) => setItems(p=>[...p,{...item,id:Date.now(),
@@ -294,23 +294,25 @@ export default function App() {
   const totalMemo  = items.filter(i=>i.type==="quick").length;
 
   const handlePrint = () => {
+    // Inject print styles + content into a hidden div, then print
     const html = buildPrintHTML(items, today);
-    const printWin = window.open('', '_blank');
-    if (printWin) {
-      printWin.document.write(html);
-      printWin.document.close();
-      printWin.onload = () => { printWin.print(); };
-    } else {
-      // Fallback for PWA: inject into current page and print
-      const prev = document.body.innerHTML;
-      const prevTitle = document.title;
-      document.title = 'Tournée DBN - ' + today;
-      document.body.innerHTML = html;
-      window.print();
-      document.body.innerHTML = prev;
-      document.title = prevTitle;
-      window.location.reload();
+    // Create/update a hidden print container
+    let el = document.getElementById('dbn-print-container');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'dbn-print-container';
+      document.body.appendChild(el);
     }
+    el.innerHTML = html;
+    // Add print style that shows only this div
+    let style = document.getElementById('dbn-print-style');
+    if (!style) {
+      style = document.createElement('style');
+      style.id = 'dbn-print-style';
+      style.textContent = '@media print { body > * { display: none !important; } #dbn-print-container { display: block !important; } #dbn-print-container * { display: revert !important; } }';
+      document.head.appendChild(style);
+    }
+    setTimeout(() => window.print(), 100);
   };
 
   return (
@@ -319,13 +321,12 @@ export default function App() {
       <div className="phone">
 
         <div className="screen">
-          {tab==="home"  && !showPdf && <Home items={items} setItems={setItems} visites={visites} totalCmd={totalCmd} totalGar={totalGar} totalMemo={totalMemo} today={today}/>}
-          {tab==="recap" && !showPdf && <Recap items={items} today={today} onPrint={handlePrint}/>}
-          {tab==="recap" && showPdf  && <PdfScreen items={items} today={today} onBack={()=>setShowPdf(false)} onPrint={()=>{const html=buildPrintHTML(items,today);const w=window.open("","_blank");if(w){w.document.write(html);w.document.close();setTimeout(()=>w.print(),400);}}}/>}
-          {tab==="trade" && !showPdf && <Trade/>}
+          {tab==="home"  && <Home items={items} setItems={setItems} visites={visites} totalCmd={totalCmd} totalGar={totalGar} totalMemo={totalMemo} today={today}/>}
+          {tab==="recap" && <Recap items={items} today={today} onPrint={handlePrint}/>}
+          {tab==="trade" && <Trade/>}
         </div>
 
-        {!showPdf && <div className="navbar">
+        <div className="navbar">
           <button className={`nb ${tab==="home"?"on":""}`} onClick={()=>{setTab("home");setFabOpen(false)}}><IHome/>Tournée</button>
           <div className="fab-w">
             <button className={`fab-sub v ${fabOpen?"":"hide"}`} onClick={()=>{setModal("visite");setFabOpen(false)}}>🏥</button>
@@ -336,9 +337,9 @@ export default function App() {
           </div>
           <button className={`nb ${tab==="recap"?"on":""}`} onClick={()=>{setTab("recap");setFabOpen(false);setShowPdf(false)}}><INotes/>Récap</button>
           <button className={`nb ${tab==="trade"?"on":""}`} onClick={()=>{setTab("trade");setFabOpen(false)}}><ITrade/>Trade</button>
-        </div>}
+        </div>
 
-        {fabOpen&&!showPdf&&<div style={{position:"absolute",bottom:90,left:0,right:0,display:"flex",justifyContent:"space-around",padding:"0 24px",pointerEvents:"none"}}>
+        {fabOpen&&<div style={{position:"absolute",bottom:90,left:0,right:0,display:"flex",justifyContent:"space-around",padding:"0 24px",pointerEvents:"none"}}>
           <span style={{fontSize:10,color:"#22c55e",fontWeight:700}}>Visite</span>
           <span style={{width:52}}/>
           <span style={{fontSize:10,color:"#f59e0b",fontWeight:700}}>Mémo</span>
@@ -465,7 +466,7 @@ function Recap({items,today,onPrint}) {
         <div style={{fontSize:12,color:"#94a3b8",marginTop:2,fontWeight:500}}>{visites.length} visites · {visites.reduce((a,v)=>a+(v.notes||[]).length,0)} notes</div>
       </div>
       <div className="recap-box">{recap}</div>
-      <button className="print-btn" onClick={onPrint}><IPrint/> Générer le PDF</button>
+      <button className="print-btn" onClick={onPrint}><IPrint/> Imprimer la tournée</button>
       <button className="copy-btn" onClick={()=>{navigator.clipboard?.writeText(recap);setCopied(true);setTimeout(()=>setCopied(false),2000)}}>
         {copied?<><ICheck/> Copié !</>:"📋 Copier le récap"}
       </button>
